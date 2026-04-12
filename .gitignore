@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.local.example
 
+# docs (로컬 메모용)
+/docs
+
 # vercel
 .vercel
 
