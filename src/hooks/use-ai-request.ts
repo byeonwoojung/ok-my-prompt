@@ -109,6 +109,7 @@ export function useAiRequest() {
           response: '',
           model,
           provider,
+          parameters: { ...(parameters as Record<string, number>) },
           latencyMs: null,
           usage: null,
           rating: null,

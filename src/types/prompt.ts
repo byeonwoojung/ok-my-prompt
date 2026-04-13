@@ -36,6 +36,8 @@ export interface ExecutionResult {
   response: string | null;
   model: string;
   provider: string;
+  /** 실행 당시 사용된 파라미터 스냅샷 (재현 가능성을 위해 저장). */
+  parameters: Record<string, number>;
   latencyMs: number | null;
   usage: { promptTokens: number; completionTokens: number } | null;
   rating: number | null;
