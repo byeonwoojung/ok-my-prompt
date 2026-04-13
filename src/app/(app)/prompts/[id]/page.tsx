@@ -138,7 +138,7 @@ export default function PromptDetailPage() {
           {(prompt.placeholders as Array<{ name: string; options: string[] }>).map(slot => (
             <div key={slot.name} className="space-y-1">
               <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-mono font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                {'{{' + slot.name + '}}'}
+                {'{{$' + slot.name + '}}'}
               </span>
               <div className="flex flex-wrap gap-1 ml-2">
                 {slot.options.map((opt, i) => (

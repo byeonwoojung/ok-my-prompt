@@ -70,7 +70,7 @@ export function computeStats(
  * 모든 순열을 생성한다.
  *
  * - 전달받는 slots는 이미 유효한 옵션만 필터링된 상태여야 함
- * - 템플릿의 모든 {{이름}} 중 slots에 없는 것은 그대로 남김
+ * - 템플릿의 모든 {{$이름}} 중 slots에 없는 것은 그대로 남김
  * - shuffleOrder: slots의 위치를 서로 교환하는 순열도 생성
  */
 export function generatePermutations(
@@ -116,14 +116,14 @@ export function generatePermutations(
         assignment[name] = combo[i];
       });
 
-      // 치환: 템플릿의 {{이름}} 을 순서에 맞게 치환
+      // 치환: 템플릿의 {{$이름}} 을 순서에 맞게 치환
       let resolved = template;
       // targetSlotPositions 순서대로 하나씩 치환 (같은 이름이 여러번 나올 수 있음)
       targetSlotPositions.forEach((originalName, posIndex) => {
         const valueProviderName = ordering[posIndex];
         const value = assignment[valueProviderName];
         // 첫 번째 매칭만 치환 (순서대로 하나씩)
-        resolved = resolved.replace(`{{${originalName}}}`, value);
+        resolved = resolved.replace(`{{$${originalName}}}`, value);
       });
 
       results.push({
