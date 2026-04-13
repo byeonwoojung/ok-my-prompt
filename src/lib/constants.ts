@@ -23,6 +23,8 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   google: {
     name: 'Google (Gemini)',
     models: [
+      { id: 'gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', supportsImages: true, maxTokens: 1000000 },
@@ -64,6 +66,8 @@ export const MODEL_PRICING: Record<string, { input: number; output: number }> = 
   'o1-mini': { input: 0.003, output: 0.012 },
   'o3-mini': { input: 0.0011, output: 0.0044 },
   'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
+  'gemini-2.5-flash-preview-04-17': { input: 0.00015, output: 0.0006 },
+  'gemini-2.5-pro-preview-05-06': { input: 0.00125, output: 0.01 },
   'gemini-2.5-flash': { input: 0.00015, output: 0.0006 },
   'gemini-2.5-pro': { input: 0.00125, output: 0.01 },
   'gemini-2.0-flash': { input: 0.0001, output: 0.0004 },
