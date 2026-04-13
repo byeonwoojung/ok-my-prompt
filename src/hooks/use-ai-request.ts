@@ -78,7 +78,7 @@ export function useAiRequest() {
         perms = [{ id: 'perm-0', index: 0, ordering: [], assignment: {}, resolvedPrompt: template }];
       }
 
-      const effectiveBatchCount = runMode === 'batch' ? batchCount : 1;
+      const effectiveBatchCount = Math.max(1, Math.min(50, runMode === 'batch' ? batchCount : 1));
       const allTasks: { permutation: Permutation; batchIndex: number }[] = [];
       for (const perm of perms) {
         for (let b = 0; b < effectiveBatchCount; b++) {
@@ -126,33 +126,33 @@ export function useAiRequest() {
             headers,
             { prompt: task.permutation.resolvedPrompt, model, parameters },
             (streamedText) => {
-              // 스트리밍 중 결과 업데이트
-              const s = usePromptStore.getState();
-              const updated = s.results.map(r =>
-                r.id === resultId ? { ...r, response: streamedText } : r
-              );
-              usePromptStore.setState({ results: updated });
+              // 스트리밍 중 결과 업데이트 (콜백 패턴으로 race condition 방지)
+              usePromptStore.setState(state => ({
+                results: state.results.map(r =>
+                  r.id === resultId ? { ...r, response: streamedText } : r
+                ),
+              }));
             }
           );
 
           if (error) throw new Error(error);
 
           const latencyMs = Date.now() - start;
-          const s = usePromptStore.getState();
-          usePromptStore.setState({
-            results: s.results.map(r =>
+          usePromptStore.setState(state => ({
+            results: state.results.map(r =>
               r.id === resultId ? { ...r, status: 'completed' as const, response: fullText, latencyMs } : r
             ),
-            progress: { ...s.progress, completed: s.progress.completed + 1 },
-          });
+            progress: { ...state.progress, completed: state.progress.completed + 1 },
+          }));
         } catch (err) {
-          const s = usePromptStore.getState();
-          usePromptStore.setState({
-            results: s.results.map(r =>
-              r.id === resultId ? { ...r, status: 'failed' as const, error: err instanceof Error ? err.message : '알 수 없는 오류', latencyMs: Date.now() - start } : r
+          const latencyMs = Date.now() - start;
+          const errorMsg = err instanceof Error ? err.message : '알 수 없는 오류';
+          usePromptStore.setState(state => ({
+            results: state.results.map(r =>
+              r.id === resultId ? { ...r, status: 'failed' as const, error: errorMsg, latencyMs } : r
             ),
-            progress: { ...s.progress, failed: s.progress.failed + 1 },
-          });
+            progress: { ...state.progress, failed: state.progress.failed + 1 },
+          }));
         }
       };
 

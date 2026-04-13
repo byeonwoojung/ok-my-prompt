@@ -83,7 +83,14 @@ export function PromptSaveDialog() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
           <div
             className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl"
             onClick={e => e.stopPropagation()}
