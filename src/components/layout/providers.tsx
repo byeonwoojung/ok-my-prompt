@@ -1,6 +1,12 @@
 'use client';
 
 import { ThemeProvider } from 'next-themes';
+import { useSessionSync } from '@/hooks/use-session-sync';
+
+function SessionSyncProvider({ children }: { children: React.ReactNode }) {
+  useSessionSync();
+  return <>{children}</>;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      {children}
+      <SessionSyncProvider>{children}</SessionSyncProvider>
     </ThemeProvider>
   );
 }
