@@ -2,8 +2,9 @@ import type { ParsedTemplate, SlotDefinition } from '@/types/prompt';
 
 // 이중 중괄호 + $ 접두사 {{$이름}} 으로 플레이스홀더 구분.
 // $ 접두사로 JSON 출력 포맷 등의 literal {{...}} 사용과 명확히 분리.
+// 변수 이름은 첫 글자가 letter/_, 이후는 letter/digit/_/공백 허용 (lazy 매칭).
 // Unicode 속성 이스케이프(\p{L}, \p{N})로 한국어 자모(NFD) 포함 모든 언어 지원.
-const SLOT_REGEX = /\{\{\$([\p{L}_][\p{L}\p{N}_]*)\}\}/gu;
+const SLOT_REGEX = /\{\{\$([\p{L}_][\p{L}\p{N}_\s]*?)\}\}/gu;
 
 export function parsePlaceholders(template: string): string[] {
   const names: string[] = [];
