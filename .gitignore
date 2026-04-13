@@ -37,6 +37,9 @@ yarn-error.log*
 # docs (로컬 메모용)
 /docs
 
+# Claude Code
+CLAUDE.md
+
 # vercel
 .vercel
 
