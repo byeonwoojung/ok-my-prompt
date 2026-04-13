@@ -1,7 +1,8 @@
 import type { ParsedTemplate, SlotDefinition } from '@/types/prompt';
 
-// 이중 중괄호 {{이름}} 으로 플레이스홀더 구분 (일반 {중괄호}와 구별)
-const SLOT_REGEX = /\{\{([a-zA-Z_\uAC00-\uD7A3][a-zA-Z0-9_\uAC00-\uD7A3]*)\}\}/g;
+// 이중 중괄호 {{이름}} 으로 플레이스홀더 구분 (일반 {중괄호}와 구별).
+// Unicode 속성 이스케이프(\p{L}, \p{N})로 한국어 자모(NFD) 포함 모든 언어 지원.
+const SLOT_REGEX = /\{\{([\p{L}_][\p{L}\p{N}_]*)\}\}/gu;
 
 export function parsePlaceholders(template: string): string[] {
   const names: string[] = [];

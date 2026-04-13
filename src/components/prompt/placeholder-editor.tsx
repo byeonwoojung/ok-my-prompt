@@ -31,8 +31,13 @@ function SlotEditor({
   };
 
   const autoResize = (el: HTMLTextAreaElement) => {
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
     el.style.height = 'auto';
     el.style.height = `${Math.max(36, el.scrollHeight)}px`;
+    if (window.scrollY !== scrollY || window.scrollX !== scrollX) {
+      window.scrollTo(scrollX, scrollY);
+    }
   };
 
   return (

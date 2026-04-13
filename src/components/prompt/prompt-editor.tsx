@@ -16,9 +16,15 @@ export function PromptEditor() {
 
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.max(120, textarea.scrollHeight)}px`;
+    if (!textarea) return;
+    // 높이 리셋(auto) → 재계산 과정에서 페이지 레이아웃이 흔들려
+    // 윈도우 스크롤이 위로 점프하는 현상을 방지하기 위해 스크롤 위치 보존.
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.max(120, textarea.scrollHeight)}px`;
+    if (window.scrollY !== scrollY || window.scrollX !== scrollX) {
+      window.scrollTo(scrollX, scrollY);
     }
   }, []);
 
