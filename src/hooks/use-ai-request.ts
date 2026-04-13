@@ -63,7 +63,7 @@ export function useAiRequest() {
   const { isLoggedIn } = useAuth();
 
   const executePermutations = useCallback(
-    async (promptType: 'text' | 'image') => {
+    async (promptType: 'text' | 'image', options?: { imageBase64?: string }) => {
       const store = usePromptStore.getState();
       const { template, slots, runMode, provider, model, parameters, batchCount } = store;
 
@@ -121,10 +121,13 @@ export function useAiRequest() {
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           if (!isLoggedIn && apiKey) headers['X-API-Key'] = apiKey;
 
+          const body: Record<string, unknown> = { prompt: task.permutation.resolvedPrompt, model, parameters };
+          if (options?.imageBase64) body.image_base64 = options.imageBase64;
+
           const { fullText, error } = await fetchStream(
             `/api/ai/${provider}`,
             headers,
-            { prompt: task.permutation.resolvedPrompt, model, parameters },
+            body,
             (streamedText) => {
               // 스트리밍 중 결과 업데이트 (콜백 패턴으로 race condition 방지)
               usePromptStore.setState(state => ({
