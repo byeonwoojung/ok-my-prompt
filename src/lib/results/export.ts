@@ -7,6 +7,7 @@ function serializeResult(r: ExecutionResult) {
     index: r.permutation.index,
     provider: r.provider,
     model: r.model,
+    parameters: r.parameters,
     assignment: r.permutation.assignment,
     resolvedPrompt: r.permutation.resolvedPrompt,
     response: r.response,
