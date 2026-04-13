@@ -1,13 +1,20 @@
 import type { ProviderConfig, AIProvider } from '@/types/ai';
 
+// 추론 모델 공통 기본값: medium effort + 충분한 출력 토큰
+const REASONING_DEFAULTS = { reasoning_effort: 2, max_tokens: 4096 };
+// GPT-5 추가 기본값: medium verbosity
+const GPT5_DEFAULTS = { ...REASONING_DEFAULTS, verbosity: 1 };
+// Gemini 2.5+ / 3.x 공통 기본값: thinking auto, 사고 요약 비표시
+const GEMINI_THINKING_DEFAULTS = { thinking_budget: -1, include_thoughts: 0 };
+
 export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   openai: {
     name: 'OpenAI',
     models: [
-      // GPT-5.4 series (reasoning, 최신 플래그십)
-      { id: 'gpt-5.4', name: 'GPT-5.4', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', supportsImages: true, maxTokens: 400000 },
-      { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano', supportsImages: true, maxTokens: 200000 },
+      // GPT-5.4 series (reasoning + verbosity, 최신 플래그십)
+      { id: 'gpt-5.4', name: 'GPT-5.4', supportsImages: true, maxTokens: 1000000, defaults: GPT5_DEFAULTS },
+      { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', supportsImages: true, maxTokens: 400000, defaults: GPT5_DEFAULTS },
+      { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano', supportsImages: true, maxTokens: 200000, defaults: { ...GPT5_DEFAULTS, reasoning_effort: 0 } },
       // GPT-4.1 series (standard, 1M context)
       { id: 'gpt-4.1', name: 'GPT-4.1', supportsImages: true, maxTokens: 1000000 },
       { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', supportsImages: true, maxTokens: 1000000 },
@@ -18,11 +25,11 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
       { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', supportsImages: true, maxTokens: 128000 },
       { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', supportsImages: false, maxTokens: 16385 },
       // o-series (reasoning)
-      { id: 'o4-mini', name: 'o4-mini', supportsImages: true, maxTokens: 200000 },
-      { id: 'o3', name: 'o3', supportsImages: true, maxTokens: 200000 },
-      { id: 'o3-mini', name: 'o3 Mini', supportsImages: false, maxTokens: 200000 },
-      { id: 'o1', name: 'o1', supportsImages: true, maxTokens: 200000 },
-      { id: 'o1-mini', name: 'o1 Mini', supportsImages: false, maxTokens: 128000 },
+      { id: 'o4-mini', name: 'o4-mini', supportsImages: true, maxTokens: 200000, defaults: REASONING_DEFAULTS },
+      { id: 'o3', name: 'o3', supportsImages: true, maxTokens: 200000, defaults: REASONING_DEFAULTS },
+      { id: 'o3-mini', name: 'o3 Mini', supportsImages: false, maxTokens: 200000, defaults: REASONING_DEFAULTS },
+      { id: 'o1', name: 'o1', supportsImages: true, maxTokens: 200000, defaults: REASONING_DEFAULTS },
+      { id: 'o1-mini', name: 'o1 Mini', supportsImages: false, maxTokens: 128000, defaults: REASONING_DEFAULTS },
     ],
     parameters: [
       { key: 'temperature', label: 'Temperature', description: '무작위성 조절. 낮을수록 일관적, 높을수록 창의적인 응답을 생성합니다. (o-series, GPT-5.x 모델에서는 무시됨)', min: 0, max: 2, step: 0.01, defaultValue: 0.7 },
@@ -30,23 +37,25 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
       { key: 'top_p', label: 'Top P', description: '누적 확률 샘플링. 낮을수록 더 집중적인 응답을 생성합니다. (추론 모델 미지원)', min: 0, max: 1, step: 0.01, defaultValue: 1.0 },
       { key: 'frequency_penalty', label: 'Frequency Penalty', description: '빈도 패널티. 양수 값은 같은 단어의 반복을 줄입니다. (추론 모델 미지원)', min: -2, max: 2, step: 0.01, defaultValue: 0 },
       { key: 'presence_penalty', label: 'Presence Penalty', description: '존재 패널티. 양수 값은 새로운 주제로 전환하도록 유도합니다. (추론 모델 미지원)', min: -2, max: 2, step: 0.01, defaultValue: 0 },
+      { key: 'reasoning_effort', label: 'Reasoning Effort', description: '추론 강도. 0=minimal, 1=low, 2=medium, 3=high. o-series / GPT-5.x 전용, 일반 모델은 무시.', min: 0, max: 3, step: 1, defaultValue: 2 },
+      { key: 'verbosity', label: 'Verbosity', description: '응답 상세도. 0=low(간결), 1=medium, 2=high(상세). GPT-5.x 시리즈 전용, 그 외는 무시.', min: 0, max: 2, step: 1, defaultValue: 1 },
     ],
   },
   google: {
     name: 'Google (Gemini)',
     models: [
-      // Gemini 3.x series (preview, 최신)
-      { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash-Lite Preview', supportsImages: true, maxTokens: 1000000 },
-      // Gemini 2.5 series (stable)
-      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', supportsImages: true, maxTokens: 1000000 },
-      // Gemini 2.0 series (deprecated, 기존 고객만)
+      // Gemini 3.x series (preview, 최신, thinking 지원)
+      { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', supportsImages: true, maxTokens: 1000000, defaults: GEMINI_THINKING_DEFAULTS },
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', supportsImages: true, maxTokens: 1000000, defaults: GEMINI_THINKING_DEFAULTS },
+      { id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash-Lite Preview', supportsImages: true, maxTokens: 1000000, defaults: GEMINI_THINKING_DEFAULTS },
+      // Gemini 2.5 series (stable, thinking 지원)
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', supportsImages: true, maxTokens: 1000000, defaults: GEMINI_THINKING_DEFAULTS },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', supportsImages: true, maxTokens: 1000000, defaults: GEMINI_THINKING_DEFAULTS },
+      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', supportsImages: true, maxTokens: 1000000, defaults: { ...GEMINI_THINKING_DEFAULTS, thinking_budget: 0 } },
+      // Gemini 2.0 series (deprecated, thinking 미지원)
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Legacy)', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash-Lite (Legacy)', supportsImages: true, maxTokens: 1000000 },
-      // Gemini 1.5 series (legacy)
+      // Gemini 1.5 series (legacy, thinking 미지원)
       { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Legacy)', supportsImages: true, maxTokens: 2000000 },
       { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash-8B (Legacy)', supportsImages: true, maxTokens: 1000000 },
@@ -56,6 +65,8 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
       { key: 'max_tokens', label: 'Max Tokens', description: '생성할 최대 출력 토큰 수 (maxOutputTokens로 전달).', min: 1, max: 8192, step: 1, defaultValue: 1024 },
       { key: 'top_p', label: 'Top P', description: '누적 확률 샘플링. 낮을수록 더 집중적인 응답을 생성합니다.', min: 0, max: 1, step: 0.01, defaultValue: 1.0 },
       { key: 'top_k', label: 'Top K', description: '상위 K개 토큰만 샘플링. 낮을수록 더 결정적인 응답을 생성합니다.', min: 1, max: 100, step: 1, defaultValue: 40 },
+      { key: 'thinking_budget', label: 'Thinking Budget', description: '사고(reasoning) 토큰 예산. -1=자동, 0=끄기 (2.5 Flash/Flash-Lite만), 양수=직접 지정. 2.5+ / 3.x 시리즈 전용, 이전 모델은 무시.', min: -1, max: 32768, step: 1, defaultValue: -1 },
+      { key: 'include_thoughts', label: 'Include Thoughts', description: '응답에 모델의 사고 과정 요약 포함 (0=off, 1=on). 2.5+ / 3.x 시리즈 전용.', min: 0, max: 1, step: 1, defaultValue: 0 },
     ],
   },
   anthropic: {

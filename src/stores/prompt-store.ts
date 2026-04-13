@@ -62,11 +62,19 @@ interface PromptStore {
 const defaultProvider: AIProvider = 'openai';
 const defaultModel = PROVIDERS.openai.models[0].id;
 
-function getDefaultParameters(provider: AIProvider): ModelParameters {
+function getDefaultParameters(provider: AIProvider, modelId?: string): ModelParameters {
   const params: ModelParameters = {};
+  // 1단계: provider의 parameters 정의에서 기본값 적용
   PROVIDERS[provider].parameters.forEach(p => {
     (params as Record<string, number>)[p.key] = p.defaultValue;
   });
+  // 2단계: 해당 모델의 defaults로 덮어쓰기 (모델별 권장값 우선)
+  if (modelId) {
+    const modelInfo = PROVIDERS[provider].models.find(m => m.id === modelId);
+    if (modelInfo?.defaults) {
+      Object.assign(params, modelInfo.defaults);
+    }
+  }
   return params;
 }
 
@@ -133,16 +141,22 @@ export const usePromptStore = create<PromptStore>((set, get) => ({
 
   provider: defaultProvider,
   model: defaultModel,
-  parameters: getDefaultParameters(defaultProvider),
+  parameters: getDefaultParameters(defaultProvider, defaultModel),
   setProvider: (p) => {
     const firstModel = PROVIDERS[p].models[0].id;
     set({
       provider: p,
       model: firstModel,
-      parameters: getDefaultParameters(p),
+      parameters: getDefaultParameters(p, firstModel),
     });
   },
-  setModel: (m) => set({ model: m }),
+  setModel: (m) => {
+    // 모델 변경 시 해당 모델의 defaults로 파라미터 리셋
+    set(state => ({
+      model: m,
+      parameters: getDefaultParameters(state.provider, m),
+    }));
+  },
   setParameter: (key, value) => {
     set(state => ({
       parameters: { ...state.parameters, [key]: value },
@@ -179,7 +193,7 @@ export const usePromptStore = create<PromptStore>((set, get) => ({
     batchCount: 1,
     provider: defaultProvider,
     model: defaultModel,
-    parameters: getDefaultParameters(defaultProvider),
+    parameters: getDefaultParameters(defaultProvider, defaultModel),
     isRunning: false,
     progress: { completed: 0, failed: 0, total: 0 },
     results: [],

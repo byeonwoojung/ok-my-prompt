@@ -2,7 +2,13 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
 import type { CompletionRequest } from './types';
-import { isOpenAIReasoningModel } from './model-utils';
+import {
+  isOpenAIReasoningModel,
+  supportsGeminiThinking,
+  supportsOpenAIVerbosity,
+  reasoningEffortFromNumber,
+  verbosityFromNumber,
+} from './model-utils';
 
 export function streamOpenAI(apiKey: string, req: CompletionRequest): ReadableStream {
   const encoder = new TextEncoder();
@@ -16,21 +22,32 @@ export function streamOpenAI(apiKey: string, req: CompletionRequest): ReadableSt
           : [{ role: 'user', content: req.prompt }];
 
         const isReasoning = isOpenAIReasoningModel(req.model);
-        const params: OpenAI.ChatCompletionCreateParamsStreaming = isReasoning
-          ? {
-              model: req.model,
-              messages,
-              max_completion_tokens: req.parameters.max_tokens,
-              stream: true,
-            }
-          : {
-              model: req.model,
-              messages,
-              temperature: req.parameters.temperature,
-              max_tokens: req.parameters.max_tokens,
-              top_p: req.parameters.top_p,
-              stream: true,
-            };
+        let params: OpenAI.ChatCompletionCreateParamsStreaming;
+        if (isReasoning) {
+          params = {
+            model: req.model,
+            messages,
+            max_completion_tokens: req.parameters.max_tokens,
+            stream: true,
+          };
+          const effort = reasoningEffortFromNumber(req.parameters.reasoning_effort);
+          if (effort) params.reasoning_effort = effort;
+          if (supportsOpenAIVerbosity(req.model)) {
+            const verb = verbosityFromNumber(req.parameters.verbosity);
+            if (verb) params.verbosity = verb;
+          }
+        } else {
+          params = {
+            model: req.model,
+            messages,
+            temperature: req.parameters.temperature,
+            max_tokens: req.parameters.max_tokens,
+            top_p: req.parameters.top_p,
+            frequency_penalty: req.parameters.frequency_penalty,
+            presence_penalty: req.parameters.presence_penalty,
+            stream: true,
+          };
+        }
 
         const stream = await client.chat.completions.create(params);
 
@@ -96,15 +113,31 @@ export function streamGoogle(apiKey: string, req: CompletionRequest): ReadableSt
           ? [{ role: 'user' as const, parts: [{ text: req.prompt }, { inlineData: { mimeType: 'image/jpeg', data: req.image_base64 } }] }]
           : [{ role: 'user' as const, parts: [{ text: req.prompt }] }];
 
+        const config: Parameters<typeof ai.models.generateContentStream>[0]['config'] = {
+          temperature: req.parameters.temperature,
+          maxOutputTokens: req.parameters.max_tokens,
+          topP: req.parameters.top_p,
+          topK: req.parameters.top_k,
+        };
+
+        // Gemini 2.5+ / 3.x 만 thinkingConfig 수용
+        if (supportsGeminiThinking(req.model)) {
+          const thinkingConfig: { thinkingBudget?: number; includeThoughts?: boolean } = {};
+          if (req.parameters.thinking_budget !== undefined) {
+            thinkingConfig.thinkingBudget = req.parameters.thinking_budget;
+          }
+          if (req.parameters.include_thoughts !== undefined) {
+            thinkingConfig.includeThoughts = req.parameters.include_thoughts === 1;
+          }
+          if (Object.keys(thinkingConfig).length > 0) {
+            config.thinkingConfig = thinkingConfig;
+          }
+        }
+
         const response = await ai.models.generateContentStream({
           model: req.model,
           contents,
-          config: {
-            temperature: req.parameters.temperature,
-            maxOutputTokens: req.parameters.max_tokens,
-            topP: req.parameters.top_p,
-            topK: req.parameters.top_k,
-          },
+          config,
         });
 
         for await (const chunk of response) {

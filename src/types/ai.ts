@@ -5,6 +5,12 @@ export interface ModelInfo {
   name: string;
   supportsImages: boolean;
   maxTokens: number;
+  /**
+   * 해당 모델 선택 시 적용할 파라미터 기본값.
+   * 사용자가 모델 변경 시 이 값으로 리셋되며, 이후 자유롭게 조정 가능.
+   * 모델이 지원하지 않는 파라미터는 서버사이드에서 자동으로 무시됨.
+   */
+  defaults?: Record<string, number>;
 }
 
 export interface ParameterDef {
@@ -30,6 +36,13 @@ export interface ModelParameters {
   frequency_penalty?: number;
   presence_penalty?: number;
   top_k?: number;
+  // Gemini thinkingConfig (2.5+, 3.x 시리즈)
+  thinking_budget?: number;   // 0 = off, -1 = automatic, 양수 = 직접 지정
+  include_thoughts?: number;  // 0 = false, 1 = true (응답에 사고 요약 포함)
+  // OpenAI reasoning (o-series, GPT-5 시리즈)
+  reasoning_effort?: number;  // 0=minimal, 1=low, 2=medium, 3=high
+  // OpenAI verbosity (GPT-5 시리즈 전용)
+  verbosity?: number;         // 0=low, 1=medium, 2=high
 }
 
 export interface AIRequest {
