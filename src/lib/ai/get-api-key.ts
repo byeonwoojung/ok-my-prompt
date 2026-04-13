@@ -3,11 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { decrypt } from '@/lib/crypto';
 import type { AIProvider } from '@/types/ai';
 
-/**
- * API 키를 가져온다.
- * 1) 비로그인: X-API-Key 헤더에서 직접 (sessionStorage → 클라이언트 → 헤더)
- * 2) 로그인: Supabase DB에서 암호화된 키를 복호화
- */
 export async function getApiKey(
   request: NextRequest,
   provider: AIProvider
@@ -30,5 +25,11 @@ export async function getApiKey(
 
   if (!data?.encrypted_key) return null;
 
-  return decrypt(data.encrypted_key);
+  try {
+    return decrypt(data.encrypted_key);
+  } catch {
+    // 복호화 실패 시 (데이터 손상 등) null 반환
+    console.error(`API 키 복호화 실패: provider=${provider}, user=${user.id}`);
+    return null;
+  }
 }
