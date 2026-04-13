@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
 import type { CompletionRequest } from './types';
+import { isOpenAIReasoningModel } from './model-utils';
 
 export function streamOpenAI(apiKey: string, req: CompletionRequest): ReadableStream {
   const encoder = new TextEncoder();
@@ -14,14 +15,24 @@ export function streamOpenAI(apiKey: string, req: CompletionRequest): ReadableSt
           ? [{ role: 'user', content: [{ type: 'text', text: req.prompt }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${req.image_base64}` } }] }]
           : [{ role: 'user', content: req.prompt }];
 
-        const stream = await client.chat.completions.create({
-          model: req.model,
-          messages,
-          temperature: req.parameters.temperature,
-          max_tokens: req.parameters.max_tokens,
-          top_p: req.parameters.top_p,
-          stream: true,
-        });
+        const isReasoning = isOpenAIReasoningModel(req.model);
+        const params: OpenAI.ChatCompletionCreateParamsStreaming = isReasoning
+          ? {
+              model: req.model,
+              messages,
+              max_completion_tokens: req.parameters.max_tokens,
+              stream: true,
+            }
+          : {
+              model: req.model,
+              messages,
+              temperature: req.parameters.temperature,
+              max_tokens: req.parameters.max_tokens,
+              top_p: req.parameters.top_p,
+              stream: true,
+            };
+
+        const stream = await client.chat.completions.create(params);
 
         for await (const chunk of stream) {
           const text = chunk.choices[0]?.delta?.content;
@@ -54,6 +65,8 @@ export function streamAnthropic(apiKey: string, req: CompletionRequest): Readabl
           model: req.model,
           max_tokens: req.parameters.max_tokens ?? 1024,
           temperature: req.parameters.temperature,
+          top_p: req.parameters.top_p,
+          top_k: req.parameters.top_k,
           messages: [{ role: 'user', content }],
         });
 
@@ -90,6 +103,7 @@ export function streamGoogle(apiKey: string, req: CompletionRequest): ReadableSt
             temperature: req.parameters.temperature,
             maxOutputTokens: req.parameters.max_tokens,
             topP: req.parameters.top_p,
+            topK: req.parameters.top_k,
           },
         });
 

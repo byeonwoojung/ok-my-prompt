@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { CompletionRequest, CompletionResponse } from './types';
+import { isOpenAIReasoningModel } from './model-utils';
 
 export async function completeOpenAI(
   apiKey: string,
@@ -24,15 +25,24 @@ export async function completeOpenAI(
     messages.push({ role: 'user', content: request.prompt });
   }
 
-  const response = await client.chat.completions.create({
-    model: request.model,
-    messages,
-    temperature: request.parameters.temperature,
-    max_tokens: request.parameters.max_tokens,
-    top_p: request.parameters.top_p,
-    frequency_penalty: request.parameters.frequency_penalty,
-    presence_penalty: request.parameters.presence_penalty,
-  });
+  const isReasoning = isOpenAIReasoningModel(request.model);
+  const params: OpenAI.ChatCompletionCreateParamsNonStreaming = isReasoning
+    ? {
+        model: request.model,
+        messages,
+        max_completion_tokens: request.parameters.max_tokens,
+      }
+    : {
+        model: request.model,
+        messages,
+        temperature: request.parameters.temperature,
+        max_tokens: request.parameters.max_tokens,
+        top_p: request.parameters.top_p,
+        frequency_penalty: request.parameters.frequency_penalty,
+        presence_penalty: request.parameters.presence_penalty,
+      };
+
+  const response = await client.chat.completions.create(params);
 
   const choice = response.choices[0];
   const usage = response.usage;
