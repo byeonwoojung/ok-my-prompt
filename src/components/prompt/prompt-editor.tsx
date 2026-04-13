@@ -33,7 +33,7 @@ export function PromptEditor() {
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">프롬프트</label>
         <span className="text-xs text-muted-foreground">
-          {'{{변수이름}}'} 형식으로 플레이스홀더를 추가하세요. 일반 {'{ }'} 중괄호와 구분됩니다.
+          {'{{$변수이름}}'} 형식으로 플레이스홀더를 추가하세요. JSON {'{{ }}'} 등과 명확히 구분됩니다.
         </span>
       </div>
       <textarea
@@ -43,7 +43,7 @@ export function PromptEditor() {
           handleChange(e);
           adjustHeight();
         }}
-        placeholder={"당신은 {{역할}}입니다. 다음 JSON 형식으로 응답하세요: {\"result\": \"...\"}"}
+        placeholder={"당신은 {{$역할}}입니다. 다음 JSON 형식으로 응답하세요: {\"result\": \"...\"}"}
         className="w-full min-h-[120px] rounded-lg border border-input bg-background px-4 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono"
         spellCheck={false}
       />
