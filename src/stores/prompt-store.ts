@@ -92,7 +92,9 @@ function autoGeneratePermutations(
 
 export const usePromptStore = create<PromptStore>((set, get) => ({
   template: '',
-  setTemplate: (t: string) => {
+  setTemplate: (rawT: string) => {
+    // macOS 등에서 한글 NFD(자모 분리) 입력 시 정규화. 표시는 동일.
+    const t = rawT.normalize('NFC');
     const detected = parsePlaceholders(t);
     const currentSlots = get().slots;
 
