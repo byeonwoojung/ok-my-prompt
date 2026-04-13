@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { usePromptStore } from '@/stores/prompt-store';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +18,13 @@ export function PromptSaveDialog() {
 
   const placeholderTitle = `제목 없음 ${nextUntitled}`;
 
+  // Cmd+S 단축키로 열기
+  useEffect(() => {
+    const handler = () => { if (template.trim()) setOpen(true); };
+    window.addEventListener('open-save-dialog', handler);
+    return () => window.removeEventListener('open-save-dialog', handler);
+  }, [template]);
+
   const handleSave = async () => {
     const finalTitle = title.trim() || placeholderTitle;
 
@@ -32,6 +40,7 @@ export function PromptSaveDialog() {
       setOpen(false);
       setTitle('');
       setDescription('');
+      toast.success('세션에 임시 저장되었습니다');
       return;
     }
 
@@ -54,8 +63,9 @@ export function PromptSaveDialog() {
       setTitle('');
       setDescription('');
       setNextUntitled(prev => prev + 1);
+      toast.success('프롬프트가 저장되었습니다');
     } catch (err) {
-      console.error('저장 실패:', err);
+      toast.error('저장에 실패했습니다');
     } finally {
       setSaving(false);
     }

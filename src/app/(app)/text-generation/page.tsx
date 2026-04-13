@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PromptEditor } from '@/components/prompt/prompt-editor';
 import { PlaceholderEditor } from '@/components/prompt/placeholder-editor';
 import { PermutationPreview } from '@/components/prompt/permutation-preview';
@@ -41,6 +41,25 @@ export default function TextGenerationPage() {
       setBatchCount(n);
     }
   };
+
+  // 키보드 단축키: Cmd+Enter=실행, Cmd+S=저장
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === 'Enter' && canRun && !isRunning) {
+          e.preventDefault();
+          executePermutations('text');
+        }
+        if (e.key === 's') {
+          e.preventDefault();
+          // 저장 다이얼로그 트리거: 커스텀 이벤트
+          window.dispatchEvent(new CustomEvent('open-save-dialog'));
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [canRun, isRunning, executePermutations]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
