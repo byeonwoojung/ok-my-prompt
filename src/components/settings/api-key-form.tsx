@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -16,9 +17,7 @@ export function ApiKeyForm({ provider }: { provider: AIProvider }) {
   const [key, setKey] = useState('');
   const [savedKeyPreview, setSavedKeyPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // 저장된 키 로드
   useEffect(() => {
     if (isLoggedIn && user) {
       const supabase = createClient();
@@ -29,12 +28,9 @@ export function ApiKeyForm({ provider }: { provider: AIProvider }) {
         .eq('provider', provider)
         .single()
         .then(({ data }) => {
-          if (data) {
-            setSavedKeyPreview(data.key_preview);
-          }
+          if (data) setSavedKeyPreview(data.key_preview + '*'.repeat(20));
         });
     } else {
-      // 비로그인: sessionStorage에서 확인
       const sessionKeys = getSessionApiKeys();
       if (sessionKeys[provider]) {
         setSavedKeyPreview(maskApiKey(sessionKeys[provider]!));
@@ -45,54 +41,51 @@ export function ApiKeyForm({ provider }: { provider: AIProvider }) {
   const handleSave = async () => {
     if (!key.trim()) return;
     setSaving(true);
-    setError(null);
 
     try {
-      if (isLoggedIn && user) {
-        const supabase = createClient();
-        const preview = key.slice(0, 15);
-
-        const { error: upsertError } = await supabase
-          .from('api_keys')
-          .upsert(
-            {
-              user_id: user.id,
-              provider,
-              encrypted_key: key, // 실제로는 서버사이드에서 암호화
-              key_preview: preview,
-            },
-            { onConflict: 'user_id,provider' }
-          );
-
-        if (upsertError) throw upsertError;
-        setSavedKeyPreview(maskApiKey(key));
+      if (isLoggedIn) {
+        // 서버사이드 암호화 API 사용
+        const res = await fetch('/api/keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider, key }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error ?? '저장 실패');
+        }
+        const data = await res.json();
+        setSavedKeyPreview(data.key_preview + '*'.repeat(20));
       } else {
-        // 비로그인: sessionStorage
         setSessionApiKey(provider, key);
         setSavedKeyPreview(maskApiKey(key));
       }
-
       setKey('');
+      toast.success('API 키가 저장되었습니다');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '저장에 실패했습니다');
+      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (isLoggedIn && user) {
-      const supabase = createClient();
-      await supabase
-        .from('api_keys')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('provider', provider);
-    } else {
-      removeSessionApiKey(provider);
+    try {
+      if (isLoggedIn) {
+        await fetch('/api/keys', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider }),
+        });
+      } else {
+        removeSessionApiKey(provider);
+      }
+      setSavedKeyPreview(null);
+      setKey('');
+      toast.success('API 키가 삭제되었습니다');
+    } catch {
+      toast.error('삭제에 실패했습니다');
     }
-    setSavedKeyPreview(null);
-    setKey('');
   };
 
   if (savedKeyPreview) {
@@ -129,9 +122,6 @@ export function ApiKeyForm({ provider }: { provider: AIProvider }) {
           {saving ? '저장 중...' : '저장'}
         </button>
       </div>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
     </div>
   );
 }

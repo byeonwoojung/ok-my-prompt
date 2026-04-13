@@ -59,7 +59,7 @@ export function ResultsGrid() {
           </button>
 
           <button
-            onClick={clearResults}
+            onClick={() => { if (confirm('모든 결과를 지우시겠습니까?')) clearResults(); }}
             className="rounded-md border border-input px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             지우기

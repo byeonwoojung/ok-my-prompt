@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getApiKey } from '@/lib/ai/get-api-key';
 import { completeGoogle } from '@/lib/ai/google';
 import { streamGoogle } from '@/lib/ai/stream';
 
@@ -12,21 +12,11 @@ function mapError(err: unknown) {
   return { code: 'MODEL_ERROR', message: `Google AI 오류: ${message}`, retryable: false };
 }
 
-async function getApiKey(request: NextRequest): Promise<string | null> {
-  const headerKey = request.headers.get('X-API-Key');
-  if (headerKey) return headerKey;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase.from('api_keys').select('encrypted_key').eq('user_id', user.id).eq('provider', 'google').single();
-  return data?.encrypted_key ?? null;
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { prompt, model, parameters, image_base64, stream } = body;
-    const apiKey = await getApiKey(request);
+    const apiKey = await getApiKey(request, 'google');
 
     if (!apiKey) {
       return NextResponse.json(
