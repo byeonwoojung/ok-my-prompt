@@ -4,13 +4,14 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   openai: {
     name: 'OpenAI',
     models: [
-      { id: 'gpt-4o', name: 'GPT-4o', supportsImages: true, maxTokens: 128000 },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', supportsImages: true, maxTokens: 128000 },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', supportsImages: true, maxTokens: 128000 },
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', supportsImages: false, maxTokens: 16385 },
-      { id: 'o1', name: 'o1', supportsImages: false, maxTokens: 200000 },
-      { id: 'o1-mini', name: 'o1 Mini', supportsImages: false, maxTokens: 128000 },
-      { id: 'o3-mini', name: 'o3 Mini', supportsImages: false, maxTokens: 200000 },
+      { id: 'gpt-5.4', name: 'GPT-5.4', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', supportsImages: true, maxTokens: 400000 },
+      { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano', supportsImages: true, maxTokens: 200000 },
+      { id: 'gpt-4.1', name: 'GPT-4.1', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gpt-4.1-nano', name: 'GPT-4.1 Nano', supportsImages: true, maxTokens: 1000000 },
+      { id: 'o3', name: 'o3', supportsImages: true, maxTokens: 200000 },
+      { id: 'o4-mini', name: 'o4-mini', supportsImages: true, maxTokens: 200000 },
     ],
     parameters: [
       { key: 'temperature', label: 'Temperature', description: '무작위성 조절. 낮을수록 일관적, 높을수록 창의적인 응답을 생성합니다.', min: 0, max: 2, step: 0.01, defaultValue: 0.7 },
@@ -23,11 +24,12 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   google: {
     name: 'Google (Gemini)',
     models: [
-      { id: 'gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash-Lite Preview', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', supportsImages: true, maxTokens: 1000000 },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', supportsImages: true, maxTokens: 1000000 },
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', supportsImages: true, maxTokens: 1000000 },
+      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', supportsImages: true, maxTokens: 1000000 },
     ],
     parameters: [
       { key: 'temperature', label: 'Temperature', description: '무작위성 조절. 낮을수록 일관적, 높을수록 창의적인 응답을 생성합니다.', min: 0, max: 2, step: 0.01, defaultValue: 0.7 },
@@ -39,9 +41,11 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   anthropic: {
     name: 'Anthropic (Claude)',
     models: [
-      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', supportsImages: true, maxTokens: 200000 },
-      { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', supportsImages: true, maxTokens: 200000 },
-      { id: 'claude-haiku-3-5-20241022', name: 'Claude Haiku 3.5', supportsImages: true, maxTokens: 200000 },
+      { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', supportsImages: true, maxTokens: 1000000 },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', supportsImages: true, maxTokens: 1000000 },
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', supportsImages: true, maxTokens: 200000 },
+      { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet 4.5', supportsImages: true, maxTokens: 200000 },
+      { id: 'claude-opus-4-5-20251101', name: 'Claude Opus 4.5', supportsImages: true, maxTokens: 200000 },
     ],
     parameters: [
       { key: 'temperature', label: 'Temperature', description: '무작위성 조절. 낮을수록 일관적, 높을수록 창의적인 응답을 생성합니다.', min: 0, max: 1, step: 0.01, defaultValue: 0.7 },
@@ -59,19 +63,26 @@ export const MAX_SESSION_PROMPTS = 5;
 
 // 모델별 대략적인 비용 (USD per 1K tokens)
 export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  'gpt-4o': { input: 0.0025, output: 0.01 },
-  'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
-  'gpt-4-turbo': { input: 0.01, output: 0.03 },
-  'o1': { input: 0.015, output: 0.06 },
-  'o1-mini': { input: 0.003, output: 0.012 },
-  'o3-mini': { input: 0.0011, output: 0.0044 },
-  'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
-  'gemini-2.5-flash-preview-04-17': { input: 0.00015, output: 0.0006 },
-  'gemini-2.5-pro-preview-05-06': { input: 0.00125, output: 0.01 },
-  'gemini-2.5-flash': { input: 0.00015, output: 0.0006 },
+  // OpenAI
+  'gpt-5.4': { input: 0.0025, output: 0.015 },
+  'gpt-5.4-mini': { input: 0.00075, output: 0.0045 },
+  'gpt-5.4-nano': { input: 0.0002, output: 0.00125 },
+  'gpt-4.1': { input: 0.002, output: 0.008 },
+  'gpt-4.1-mini': { input: 0.0004, output: 0.0016 },
+  'gpt-4.1-nano': { input: 0.0001, output: 0.0004 },
+  'o3': { input: 0.002, output: 0.008 },
+  'o4-mini': { input: 0.0011, output: 0.0044 },
+  // Google (Gemini)
+  'gemini-3-flash-preview': { input: 0.0005, output: 0.003 },
+  'gemini-3.1-pro-preview': { input: 0.002, output: 0.012 },
+  'gemini-3.1-flash-lite-preview': { input: 0.00025, output: 0.0015 },
+  'gemini-2.5-flash': { input: 0.0003, output: 0.0025 },
   'gemini-2.5-pro': { input: 0.00125, output: 0.01 },
-  'gemini-2.0-flash': { input: 0.0001, output: 0.0004 },
-  'claude-sonnet-4-20250514': { input: 0.003, output: 0.015 },
-  'claude-opus-4-20250514': { input: 0.015, output: 0.075 },
-  'claude-haiku-3-5-20241022': { input: 0.0008, output: 0.004 },
+  'gemini-2.5-flash-lite': { input: 0.0001, output: 0.0004 },
+  // Anthropic (Claude)
+  'claude-opus-4-6': { input: 0.005, output: 0.025 },
+  'claude-sonnet-4-6': { input: 0.003, output: 0.015 },
+  'claude-haiku-4-5-20251001': { input: 0.001, output: 0.005 },
+  'claude-sonnet-4-5-20250929': { input: 0.003, output: 0.015 },
+  'claude-opus-4-5-20251101': { input: 0.005, output: 0.025 },
 };
