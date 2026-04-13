@@ -30,16 +30,6 @@ function SlotEditor({
     setTimeout(() => lastRef.current?.focus(), 0);
   };
 
-  const autoResize = (el: HTMLTextAreaElement) => {
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
-    el.style.height = 'auto';
-    el.style.height = `${Math.max(36, el.scrollHeight)}px`;
-    if (window.scrollY !== scrollY || window.scrollX !== scrollX) {
-      window.scrollTo(scrollX, scrollY);
-    }
-  };
-
   return (
     <div className="rounded-lg border border-border bg-card/50">
       {/* 헤더 */}
@@ -62,14 +52,10 @@ function SlotEditor({
             <textarea
               ref={index === options.length - 1 ? lastRef : undefined}
               value={option}
-              onChange={(e) => {
-                updateOption(index, e.target.value);
-                autoResize(e.target);
-              }}
-              onFocus={(e) => autoResize(e.target)}
+              onChange={(e) => updateOption(index, e.target.value)}
               placeholder={`옵션 ${index + 1}`}
               rows={1}
-              className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring resize-none overflow-hidden"
+              className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring resize-none overflow-hidden [field-sizing:content]"
             />
             {options.length > 1 && (
               <button
