@@ -6,11 +6,18 @@ import { RatingControls } from './rating-controls';
 import { PermutationSummary } from './permutation-summary';
 import { exportSingleResult } from '@/lib/results/export';
 
+/** 리터럴 \n, \t 등을 실제 제어문자로 변환. */
+function prettify(text: string): string {
+  return text.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+}
+
 export function ResultCard({ result }: { result: ExecutionResult }) {
   const [expanded, setExpanded] = useState(false);
+  const [pretty, setPretty] = useState(false);
 
   const isError = result.status === 'failed';
   const isPending = result.status === 'pending' || result.status === 'running';
+  const displayResponse = pretty && result.response ? prettify(result.response) : result.response;
 
   return (
     <div
@@ -52,16 +59,26 @@ export function ResultCard({ result }: { result: ExecutionResult }) {
       ) : (
         <div>
           <p className={`text-sm leading-relaxed whitespace-pre-wrap ${expanded ? '' : 'line-clamp-6'}`}>
-            {result.response}
+            {displayResponse}
           </p>
-          {result.response && result.response.length > 300 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="mt-1 text-xs text-primary hover:underline"
-            >
-              {expanded ? '접기' : '더 보기'}
-            </button>
-          )}
+          <div className="mt-1.5 flex items-center gap-3">
+            {result.response && result.response.length > 300 && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs text-primary hover:underline"
+              >
+                {expanded ? '접기' : '더 보기'}
+              </button>
+            )}
+            {result.response && result.response.includes('\\n') && (
+              <button
+                onClick={() => setPretty(!pretty)}
+                className={`text-xs hover:underline ${pretty ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+              >
+                {pretty ? '원본 보기' : '예쁘게 보기'}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

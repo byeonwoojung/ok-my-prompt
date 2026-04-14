@@ -3,29 +3,20 @@
 import { useState } from 'react';
 import type { Permutation } from '@/types/prompt';
 
-/**
- * 순열(플레이스홀더 조합) 요약 표시.
- * - 플레이스홀더가 있으면: 각 {변수명: 값} 쌍을 칩으로 나열
- * - 없으면: resolvedPrompt 전체를 접힘/펼침 블록으로 표시
- */
 export function PermutationSummary({ permutation }: { permutation: Permutation }) {
   const entries = Object.entries(permutation.assignment);
   const hasPlaceholders = entries.length > 0;
 
   if (hasPlaceholders) {
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-3">
         {entries.map(([key, val]) => (
-          <span
-            key={key}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2 py-0.5 text-[11px]"
-          >
-            <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+          <div key={key} className="space-y-0.5">
+            <div className="font-mono text-[11px] font-semibold text-amber-700 dark:text-amber-400">
               {`{{$${key}}}`}
-            </span>
-            <span className="text-muted-foreground">=</span>
-            <span className="font-medium">{val}</span>
-          </span>
+            </div>
+            <div className="text-sm font-medium">{val}</div>
+          </div>
         ))}
       </div>
     );
