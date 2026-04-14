@@ -6,6 +6,7 @@ import { ResultCard } from './result-card';
 import { RatingControls } from './rating-controls';
 import { PermutationSummary } from './permutation-summary';
 import { exportAllAsSingleJson, exportAllAsZip, exportSingleResult } from '@/lib/results/export';
+import type { ExecutionResult } from '@/types/prompt';
 
 export function ResultsGrid() {
   const { results, viewMode, setViewMode, clearResults } = usePromptStore();
@@ -191,24 +192,7 @@ function ResultsTable() {
                             </pre>
                           )}
                         </div>
-                        <div className="space-y-2">
-                          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                            응답 {r.usage && (
-                              <span className="ml-2 normal-case text-muted-foreground/70">
-                                ({r.usage.promptTokens + r.usage.completionTokens} 토큰)
-                              </span>
-                            )}
-                          </div>
-                          {isError ? (
-                            <pre className="rounded-md bg-destructive/10 p-3 text-xs text-destructive whitespace-pre-wrap">
-                              {r.error}
-                            </pre>
-                          ) : (
-                            <pre className="max-h-96 overflow-auto rounded-md bg-muted/50 p-3 text-xs leading-relaxed whitespace-pre-wrap">
-                              {r.response}
-                            </pre>
-                          )}
-                        </div>
+                        <ExpandedResponse result={r} />
                       </div>
                     </td>
                   </tr>
@@ -218,6 +202,48 @@ function ResultsTable() {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function ExpandedResponse({ result }: { result: ExecutionResult }) {
+  const [pretty, setPretty] = useState(false);
+  const isError = result.status === 'failed';
+  const hasEscapedNewlines = result.response?.includes('\\n') ?? false;
+  const displayText = pretty && result.response
+    ? result.response.replace(/\\n/g, '\n').replace(/\\t/g, '\t')
+    : result.response;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span>
+          응답 {result.usage && (
+            <span className="ml-1 normal-case text-muted-foreground/70">
+              ({result.usage.promptTokens + result.usage.completionTokens} 토큰)
+            </span>
+          )}
+        </span>
+        {hasEscapedNewlines && (
+          <button
+            onClick={() => setPretty(!pretty)}
+            className={`rounded px-1.5 py-0.5 normal-case transition-colors ${
+              pretty ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            예쁘게 보기
+          </button>
+        )}
+      </div>
+      {isError ? (
+        <pre className="rounded-md bg-destructive/10 p-3 text-xs text-destructive whitespace-pre-wrap">
+          {result.error}
+        </pre>
+      ) : (
+        <pre className="max-h-96 overflow-auto rounded-md bg-muted/50 p-3 text-xs leading-relaxed whitespace-pre-wrap">
+          {displayText}
+        </pre>
+      )}
     </div>
   );
 }
