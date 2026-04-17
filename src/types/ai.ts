@@ -4,7 +4,13 @@ export interface ModelInfo {
   id: string;
   name: string;
   supportsImages: boolean;
+  /** 컨텍스트 창 크기 (입력 + 출력 합산 한도) */
   maxTokens: number;
+  /**
+   * 모델이 단일 응답으로 생성 가능한 최대 출력 토큰 수.
+   * UI의 max_tokens 슬라이더 상한으로 사용됨. 미지정 시 provider 기본 상한 사용.
+   */
+  maxOutputTokens?: number;
   /**
    * 해당 모델 선택 시 적용할 파라미터 기본값.
    * 사용자가 모델 변경 시 이 값으로 리셋되며, 이후 자유롭게 조정 가능.
